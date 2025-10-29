@@ -1,0 +1,9 @@
+from eu5.utils import file_utils
+
+loc = file_utils.Locfile("testloc2")
+
+while True:
+    loc.add("key", "val")
+    input("")
+    loc.remove("key", "val")
+    input("")

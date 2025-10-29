@@ -1,0 +1,7 @@
+build/
+eu5.egg-info/
+EuCompiler.build/
+EuCompiler.dist/
+__pycache__/
+.vscode/
+.env/

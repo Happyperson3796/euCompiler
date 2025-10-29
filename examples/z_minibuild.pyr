@@ -1,0 +1,6 @@
+
+with open("y_clean.pyr", "r") as file:
+    exec(file.read())
+
+with open("x_scan.pyr", "r") as file:
+    exec(file.read())

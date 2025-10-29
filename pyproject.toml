@@ -1,0 +1,4 @@
+[build-system]
+packages = ["eu5"]
+py-modules = ["__init__"]
+requires = ["setuptools @ git+https://github.com/pypa/setuptools.git@main"]
