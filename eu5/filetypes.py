@@ -1,4 +1,4 @@
-from .objects import append_file, flag, merge_file, pull_file, epython
+from .objects import append_file, flag, merge_file, pull_file, epython, event
 from .objects.filetype import fileType
 import os
 
@@ -17,6 +17,8 @@ def get(path: str):
         return append_file.Appended(path)
     elif endswith(path, ".flag.tga"):
         return flag.Flag(path)
+    elif endswith(path, ".event"):
+        return event.Event(path)
     #elif endswith(path, ".focus.dds"):
     #    return focus_icon.FocusIcon(path)
     elif endswith(path, ".epy"):
@@ -30,6 +32,7 @@ def order():
         merge_file.Merged,
         append_file.Appended,
         flag.Flag,
+        event.Event,
         #focus_icon.FocusIcon,
         epython.ePython,
         fileType

@@ -1,0 +1,39 @@
+test_events.1 = {
+ 	type = country_event
+ 	title = "titleee"
+ 	desc = "hi hi"
+ 	historical_info = test_events.1.historical_info
+ 	
+ 	trigger = { 	# List of requirements that need to be fulfilled for event to file
+ 		is_subject = no
+ 	}
+ 
+ 
+ 	fire_only_once = yes 	# may fire only once during a campaign, regardless of nation
+ 
+ 
+ 	dynamic_historical_event = { 	# Used to make the event fire for the right tags 
+  		tag = FRA		# tag that this event can fire for, can provide multiple
+ 		from = 1400.1.1	 	# the earliest date at which this event can fire
+ 		to = 1500.1.1 		# the latest date at which this event can fire
+ 		monthly_chance = 10	# monthly chance to fire the event (10 = 10%)
+ 	}
+ 
+ 
+ 	option = {
+ 		name = test_events.1.a	# localizable key for event option
+ 
+ 
+ 		historical_option = yes
+ 		add_gold = 25
+ 	}
+ 
+ 
+  	option = {
+ 		name = test_events.1.b
+ 	}
+}
+
+test_events.2 = {
+ 	title = "title???"
+}
