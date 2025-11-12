@@ -9,6 +9,7 @@ import time
 from tqdm import tqdm
 import builtins
 
+from . import globals
 from .objects import epython
 
 oprint = builtins.print
@@ -85,6 +86,8 @@ class Scan():
 class Build():
     def __init__(self, mod_path):
         self.mod = mod_path.removesuffix("/").removesuffix("\\")
+        globals.mod = self.mod+"\\"
+        globals.mod_namespace = self.mod.split("\\")[-1]
 
         #print("Created a new Build for "+str(self.mod))
         if os.path.exists("build.eu5"):

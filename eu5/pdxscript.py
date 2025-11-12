@@ -8,7 +8,7 @@ def is_connector(char):
 
 
 class Jom():
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         pass
 
 class StoredData(Jom):
@@ -58,6 +58,7 @@ class Value(StoredData):
     
 class Pair(Jom):
     def __init__(self, k, c, v):
+        if type(v) != Value: v = Value(v)
         self.holder = (k, c, v)
 
     def text(self):
@@ -72,7 +73,11 @@ class Pair(Jom):
         return self.holder[index]
     
     def __setitem__(self, index, value):
+        self.holder = list(self.holder)
         self.holder[index] = value
+        if type(self.holder[-1]) != Value:
+            self.holder[-1] = Value(self.holder[-1])
+        self.holder = tuple(self.holder)
 
     def key_data(self):
         """Wrapped p[0]"""
@@ -91,6 +96,9 @@ class Pair(Jom):
         return self[2]
 
 class Collection(Jom, list):
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        self.extend([*args])
     def text(self):
         return "{\n"+"\n".join(map(str, self))+"\n}"
     def __str__(self):
@@ -122,7 +130,9 @@ class Collection(Jom, list):
         try:
             return self._get(retrieve, False, debug)
         except Exception as e:
-            if default != None: return default
+            if default != None:
+                if not isinstance(default, StoredData): default = StoredData(default)
+                return default
             else: raise e
 
     def get_pair(self, retrieve: str, default=None, debug=False):
@@ -130,7 +140,20 @@ class Collection(Jom, list):
         try:
             return self._get(retrieve, True, debug)
         except Exception as e:
-            if default != None: return default
+            if default != None:
+                if not isinstance(default, StoredData): default = StoredData(default)
+                return default
+            else: raise e
+
+    def get_pop(self, retrieve: str, default=None, debug=False):
+        obj = self.get_pair(retrieve, default, debug)
+        try: self.remove(obj)
+        except: pass
+        try: return obj[-1]
+        except Exception as e:
+            if default != None:
+                if not isinstance(default, StoredData): default = StoredData(default)
+                return default
             else: raise e
             
     def put(self, p: Pair):
@@ -163,6 +186,9 @@ class Collection(Jom, list):
             for x in to_append:
                 l += 1
                 this.insert(l, x)
+
+    def copy(self):
+        return get(str(self))
 
 
 

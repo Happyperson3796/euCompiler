@@ -13,6 +13,7 @@ class Locfile():
         dirs = dir+"/".join(filename.split("/")[:-1])
         os.makedirs(dirs, exist_ok=True)
 
+        self.name = filename
         self.filepath = dir+filename
 
     def add(self, key: str, val: str):

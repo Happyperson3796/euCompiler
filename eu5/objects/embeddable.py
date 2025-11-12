@@ -1,29 +1,70 @@
 from .filetype import fileType
 from ..pdxscript import get, format, Pair, Collection
 from ..utils.file_utils import Locfile
+from .. import globals
+import os
 
 class Embeddable(fileType):
 
-    def run(self, filename, data, embeddable: dict):
+    def run(self, data, locfilename, embeddable_loc: dict):
         self.embedded_loc = {}
-        self.scan_data(data, embeddable)
+        self.embedded_modifiers = Collection()
+        locfile = Locfile(locfilename)
+
+        self.scan_data(data, locfile, embeddable_loc)
+
         for x, y in self.embedded_loc.items():
-            locfile = Locfile(filename)
             locfile.add(x, y)
 
-    def clean(self, filename, data, embeddable: dict):
+        modifier_path = globals.mod+"/main_menu/common/static_modifiers/"
+        os.makedirs(modifier_path, exist_ok=True)
+        with open(modifier_path+self.path.split("\\")[-1].split(".")[0]+"_inline_modifiers.txt", "w", encoding="utf-8-sig") as file:
+            file.write(format(self.embedded_modifiers))
+
+    def clean(self, data, locfilename, embeddable_loc: dict):
         self.embedded_loc = {}
-        self.scan_data(data, embeddable)
+        self.embedded_modifiers = Collection()
+        locfile = Locfile(locfilename)
+
+        self.scan_data(data, locfile, embeddable_loc)
+
         for x, y in self.embedded_loc.items():
-            locfile = Locfile(filename)
             locfile.remove(x, y)
 
-    def scan_data(self, obj, embeddable: dict):
+        modifier_path = globals.mod+"/main_menu/common/static_modifiers/"
+        try: os.remove(modifier_path+self.path.split("\\")[-1].split(".")[0]+"_inline_modifiers.txt")
+        except: pass
+
+    def scan_data(self, obj, locfile, embeddable_loc: dict):
         if isinstance(obj, Pair):
-            self.scan_data(obj[-1], embeddable)
-            for x, y in embeddable.items():
+
+            if obj[0] == "inline_modifiers":
+                for x in obj[-1]:
+                    id = x[0]
+                    modifier_data = x[-1]
+                    loc = modifier_data.get_pop("name", "").unquote()
+                    if loc != "": self.embedded_loc["STATIC_MODIFIER_NAME_"+id] = loc
+                    self.embedded_modifiers.append(Pair(id,"=",modifier_data))
+
+                obj[0] = ""
+                obj[1] = ""
+                obj[-1] = ""
+                return
+
+            for x, y in embeddable_loc.items():
                 if x == obj[0]:
-                    self.embedded_loc[y] = obj[-1].unquote()
+                    newKey = x
+                    if isinstance(y, list):
+                        newKey = y[-1]
+                        y = y[0]
+
+                    obj[0] = newKey
+                    o = obj[-1]
+                    if o.startswith("\"") and o.endswith("\""):
+                        self.embedded_loc[y] = o.unquote() #Don't include unquoted embeds, probably are loc keys
+                        o.set(y)
+
+            self.scan_data(obj[-1], locfile, embeddable_loc)
         elif isinstance(obj, Collection):
             for x in obj:
-                self.scan_data(x, embeddable)
+                self.scan_data(x, locfile, embeddable_loc)
