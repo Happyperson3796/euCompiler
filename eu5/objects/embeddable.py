@@ -35,9 +35,8 @@ class Embeddable(fileType):
         try: os.remove(modifier_path+self.path.split("\\")[-1].split(".")[0]+"_inline_modifiers.txt")
         except: pass
 
-    def scan_data(self, obj, locfile, embeddable_loc: dict):
+    def scan_data(self, obj, locfile, embeddable_loc: dict, root=""):
         if isinstance(obj, Pair):
-
             if obj[0] == "inline_modifiers":
                 for x in obj[-1]:
                     id = x[0]
@@ -52,6 +51,15 @@ class Embeddable(fileType):
                 return
 
             for x, y in embeddable_loc.items():
+
+                x = x.replace("$R$", root)
+                if isinstance(y, list):
+                    z = []
+                    for n in y:
+                        z.append(n.replace("$R$", root))
+                    y = z
+                else: y = y.replace("$R$", root)
+
                 if x == obj[0]:
                     newKey = x
                     if isinstance(y, list):
@@ -64,7 +72,9 @@ class Embeddable(fileType):
                         self.embedded_loc[y] = o.unquote() #Don't include unquoted embeds, probably are loc keys
                         o.set(y)
 
-            self.scan_data(obj[-1], locfile, embeddable_loc)
+            if root == "":
+                root = obj[0]
+            self.scan_data(obj[-1], locfile, embeddable_loc, root)
         elif isinstance(obj, Collection):
             for x in obj:
-                self.scan_data(x, locfile, embeddable_loc)
+                self.scan_data(x, locfile, embeddable_loc, root)
