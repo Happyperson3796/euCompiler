@@ -5,3 +5,5 @@ EuCompiler.dist/
 __pycache__/
 .vscode/
 .env/
+*.lnk
+*.exe
