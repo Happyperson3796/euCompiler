@@ -8,7 +8,7 @@ class Merged(fileType):
         subpath = subpath.removeprefix("/").removesuffix("/").split("/")
 
         if not os.path.exists(base_file): #Create if not found
-            with open(base_file, "w") as file:
+            with open(base_file, "w", encoding="utf-8-sig") as file:
                 t = ""
                 for x in subpath:
                     t += x+"={"
@@ -16,7 +16,7 @@ class Merged(fileType):
                     t += "}"
                 file.write(t)
 
-        with open(base_file, "r") as file:
+        with open(base_file, "r", encoding="utf-8-sig") as file:
             base = get(file.read())
             subbase = base.get(subpath[0])
             for p in subpath[1:]:
@@ -28,13 +28,13 @@ class Merged(fileType):
 
         subbase.merge(suboverride, reverse)
 
-        with open(base_file, "w") as file:
+        with open(base_file, "w", encoding="utf-8-sig") as file:
             file.write(format(base))
 
     def run(self):
         head, tail = os.path.split(self.path)
 
-        with open(self.path, "r") as file:
+        with open(self.path, "r", encoding="utf-8-sig") as file:
             raw = get(file.read())
 
         for data in raw:
@@ -52,7 +52,7 @@ class Merged(fileType):
     def clean(self):
         head, tail = os.path.split(self.path)
 
-        with open(self.path, "r") as file: #TODO: Proper data removal, not just file deletion.
+        with open(self.path, "r", encoding="utf-8-sig") as file: #TODO: Proper data removal, not just file deletion.
             raw = get(file.read())
 
         for data in raw:
