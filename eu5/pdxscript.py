@@ -3,7 +3,7 @@ def is_spacing(char):
     return char == " " or char == "\n" or char == "\t" or char == ""
 
 def is_connector(char):
-    return char == "=" or char == "<" or char == ">" or char == "?="
+    return char == "=" or char == "<" or char == ">" or char == "?=" or char == "<=" or char == ">="
 
 
 
@@ -229,12 +229,35 @@ def parse(text):
                 if buffer != "":
                     parsed.append(buffer)
                 buffer = ""
+
             elif (buffer.endswith("?") and char == "=") and not is_quoted: #?= connector handling
                 if buffer.removesuffix("?") != "":
                     parsed.append(buffer.removesuffix("?"))
                 parsed.append("?"+char)
                 buffer = ""
-            elif (is_connector(char) or char == "{" or char == "}") and not is_quoted:
+            elif (buffer.endswith("<") and char == "=") and not is_quoted: #<= connector handling
+                if buffer.removesuffix("<") != "":
+                    parsed.append(buffer.removesuffix("<"))
+                parsed.append("<"+char)
+                buffer = ""
+            elif (buffer.endswith(">") and char == "=") and not is_quoted: #>= connector handling
+                if buffer.removesuffix(">") != "":
+                    parsed.append(buffer.removesuffix(">"))
+                parsed.append(">"+char)
+                buffer = ""
+
+            elif (buffer.endswith(">")) and not is_quoted: #> connector handling
+                if buffer.removesuffix(">") != "":
+                    parsed.append(buffer.removesuffix(">"))
+                parsed.append(">")
+                buffer = ""
+            elif (buffer.endswith("<")) and not is_quoted: #< connector handling
+                if buffer.removesuffix("<") != "":
+                    parsed.append(buffer.removesuffix("<"))
+                parsed.append("<")
+                buffer = ""
+
+            elif ((is_connector(char) and char != ">" and char != "<") or char == "{" or char == "}") and not is_quoted:
                 if buffer != "":
                     parsed.append(buffer)
                 parsed.append(char)
