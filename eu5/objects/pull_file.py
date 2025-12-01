@@ -8,7 +8,7 @@ class Pulled(fileType):
         dest_file = head+"/"+dest_file
         if not os.path.exists(dest_file):
             try:
-                shutil.copyfile(globals.vanilla_path+"/"+base_file, dest_file)
+                shutil.copyfile(globals.vanilla_path+"/game/"+base_file, dest_file)
                 if len(lines) > 0:
                     with open(dest_file, "r") as file:
                         content = file.readlines()
