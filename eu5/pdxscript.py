@@ -163,7 +163,7 @@ class Collection(Jom, list):
         except:
             self.append(p)
     
-    def merge(self, collection, reverse=False):
+    def merge(self, collection, reverse=False, key_path="", header=0):
         """Critical function that I wrote while sleep deprived"""
         this = self
 
@@ -172,7 +172,16 @@ class Collection(Jom, list):
         for override in collection:
             append = True
             for pair in this:
-                if override[0] == pair[0]:
+
+                equals = False
+                if key_path == "":
+                    if override[0] == pair[0]:
+                        equals = True
+                else:
+                    if isinstance(pair, Collection) and override.value().get(key_path).unquote().strip() == pair.value().get(key_path).unquote().strip():
+                        equals = True
+
+                if equals:
                     append = False
                     pair[-1].set(override[-1])
 
@@ -182,7 +191,7 @@ class Collection(Jom, list):
         if not reverse:
             this.extend(to_append)
         else:
-            l = -1
+            l = -1 + header
             for x in to_append:
                 l += 1
                 this.insert(l, x)

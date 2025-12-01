@@ -4,7 +4,7 @@ from .pull_file import Pulled
 import os
 
 class Merged(fileType):
-    def execute(data: Jom, base_file: str, subpath: str, reverse: bool):
+    def execute(data: Jom, base_file: str, subpath: str, reverse: bool, key_path: str, header: int):
         subpath = subpath.removeprefix("/").removesuffix("/").split("/")
 
         if not os.path.exists(base_file): #Create if not found
@@ -26,7 +26,7 @@ class Merged(fileType):
         for p in subpath[1:]:
             suboverride = suboverride.get(p)
 
-        subbase.merge(suboverride, reverse)
+        subbase.merge(suboverride, reverse, key_path, header)
 
         with open(base_file, "w", encoding="utf-8-sig") as file:
             file.write(format(base))
@@ -40,12 +40,14 @@ class Merged(fileType):
         for data in raw:
             base_file = data.key_data().unquote().strip()
             subpath = data.value().get("path").unquote().strip()
+            key_path = data.value().get("key_path", "").unquote().strip()
             reverse = data.value().get("reverse", "no").bool()
             pull = data.value().get("pull", "").unquote().strip()
+            header = int(data.value().get("header", "0").unquote().strip())
 
             if pull != "": Pulled.execute(head, pull+"/"+base_file, base_file)
 
-            Merged.execute(data, head+"/"+base_file, subpath, reverse)
+            Merged.execute(data, head+"/"+base_file, subpath, reverse, key_path, header)
             
 
 
