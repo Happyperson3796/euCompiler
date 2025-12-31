@@ -6,8 +6,8 @@ from .. import globals
 
 class Event(Embeddable):
     def get_embeddable(self):
-        d = {"title": "$R$.title", "desc": "$R$.desc", "historical_info": "$R$.historical_info"}
-        for x in ["a","b","c","d","e","f","g","h","i","j","k"]: d[x] = ["$R$."+x, "name"]
+        d = {"title": "$ROOT.title", "desc": "$ROOT.desc", "historical_info": "$ROOT.historical_info"}
+        for x in ["a","b","c","d","e","f","g","h","i","j","k"]: d[x] = ["$ROOT."+x, "name"]
         return d
 
     def run(self):

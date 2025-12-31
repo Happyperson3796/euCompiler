@@ -1,4 +1,4 @@
-from .objects import append_file, flag, merge_file, pull_file, epython, event
+from .objects import append_file, flag, merge_file, pull_file, epython, event, reform
 from .objects.filetype import fileType
 import os
 
@@ -19,6 +19,8 @@ def get(path: str):
         return flag.Flag(path)
     elif endswith(path, ".event"):
         return event.Event(path)
+    elif endswith(path, ".reform"):
+        return reform.Reform(path)
     #elif endswith(path, ".focus.dds"):
     #    return focus_icon.FocusIcon(path)
     elif endswith(path, ".epy"):

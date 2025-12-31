@@ -263,7 +263,8 @@ class Build():
         self.apply_overrides()
 
         if os.path.exists(globals.mod+"/~.metadata"):
-            shutil.rmtree(globals.mod+"/.metadata")
+            if os.path.exists(globals.mod+"/.metadata"):
+                shutil.rmtree(globals.mod+"/.metadata")
             os.rename(globals.mod+"/~.metadata", globals.mod+"/.metadata")
             print("Unpacked Metadata...")
 

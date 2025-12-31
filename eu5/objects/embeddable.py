@@ -52,13 +52,13 @@ class Embeddable(fileType):
 
             for x, y in embeddable_loc.items():
 
-                x = x.replace("$R$", root)
+                x = x.replace("$ROOT", root)
                 if isinstance(y, list):
                     z = []
                     for n in y:
-                        z.append(n.replace("$R$", root))
+                        z.append(n.replace("$ROOT", root))
                     y = z
-                else: y = y.replace("$R$", root)
+                else: y = y.replace("$ROOT", root)
 
                 if x == obj[0]:
                     newKey = x
