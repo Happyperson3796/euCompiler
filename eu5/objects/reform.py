@@ -25,6 +25,8 @@ class Reform(Embeddable):
             key = p.key()
             if os.path.exists(head+"/"+key+".dds"):
                 os.makedirs(globals.mod+"main_menu/gfx/interface/icons/government_reforms/illustrations/", exist_ok=True)
+                try: os.remove(globals.mod+"main_menu/gfx/interface/icons/government_reforms/illustrations/"+key+".dds")
+                except: pass
                 os.rename(head+"/"+key+".dds", globals.mod+"main_menu/gfx/interface/icons/government_reforms/illustrations/"+key+".dds")
 
 
