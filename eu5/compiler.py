@@ -36,7 +36,24 @@ def compute_file_hash(file_path):
             hash_func.update(chunk)
     return hash_func.hexdigest()
 
+def compute_directory_hash(dir_path):
+    sha256 = hashlib.sha256()
+    all_files = []
+    for root, _, files in os.walk(dir_path):
+        for names in files:
+            all_files.append(os.path.join(root, names))
+    
+    all_files.sort()
 
+    for file_path in all_files:
+        if file_path.endswith("build.eu5") or file_path.endswith("build.euc"): continue
+        relative_path = os.path.relpath(file_path, dir_path)
+        sha256.update(relative_path.encode('utf-8'))
+        
+        with open(file_path, 'rb') as f:
+            while chunk := f.read(4096):
+                sha256.update(chunk)
+    return sha256.hexdigest()
 
 def scan(home_dir):
     Scan(home_dir)
@@ -108,6 +125,11 @@ class Build():
         if "run_unsafe" in self.data.keys() and self.data["run_unsafe"]:
             epython.python_allowed = True
             print("\033[38;5;208mWarning! Unsafe mode is enabled. Do not copy/paste python files you don't understand.\033[0m")
+
+        if "full_cleanup" in self.data.keys() and self.data["full_cleanup"]:
+            for path in os.scandir(self.mod):
+                if path.is_dir(): shutil.rmtree(path.path)
+                if path.is_file() and "build" not in path.name: os.remove(path.path)
 
         if os.path.exists(self.mod+"/.build"):
             self.deposit_compiler_files(self.mod, self.mod+"/.build")
@@ -289,3 +311,5 @@ class Build():
 
         #print("Cleaning empty dirs...")
         self.clean_empty_dirs()
+
+        print("Build Hash: "+compute_directory_hash(globals.mod)[:5])
