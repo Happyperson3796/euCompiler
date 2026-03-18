@@ -9,3 +9,11 @@ def clean(dir):
             if filetypes.should_run(path.path):
                 filetypes.get(path.path).clean()
 clean(os.getcwd())
+
+def clean_empty_dirs(dir):
+    for path in os.scandir(dir):
+        if path.is_dir():
+            clean_empty_dirs(path.path)
+    if len(os.listdir(dir)) == 0:
+        os.rmdir(dir)
+clean_empty_dirs(os.getcwd())

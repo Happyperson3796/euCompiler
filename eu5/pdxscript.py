@@ -39,6 +39,13 @@ class StoredData(Jom):
     def _value(self):
         """Intended for use with type() checks, outside of this should not be needed."""
         return self.value
+    
+    def _val(self):
+        """Intended for use with type() checks, outside of this should not be needed."""
+        return self._value()
+    
+    def is_empty(self):
+        return self.value == ""
 
     def unquote(self) -> str:
         if not isinstance(self.value, str): raise Exception("Not a string!")
@@ -146,22 +153,27 @@ class Collection(Jom, list):
             else: raise e
 
     def get_pop(self, retrieve: str, default=None, debug=False):
-        obj = self.get_pair(retrieve, default, debug)
-        try: self.remove(obj)
-        except: pass
+        obj = self.get_pop_pair(retrieve, default, debug)
         try: return obj[-1]
         except Exception as e:
             if default != None:
                 if not isinstance(default, StoredData): default = StoredData(default)
                 return default
             else: raise e
+
+    def get_pop_pair(self, retrieve: str, default=None, debug=False):
+        obj = self.get_pair(retrieve, default, debug)
+        try: self.remove(obj)
+        except: pass
+        return obj
             
-    def put(self, p: Pair):
+    def put(self, p: Pair, prepend: bool = False):
         """Sets a Pair value, OR appends it to the collection."""
         try:
             self.retrieve(p[0]).set(p[-1])
         except:
-            self.append(p)
+            if not prepend: self.append(p)
+            else: self.insert(0, p)
     
     def merge(self, collection, reverse=False, key_path="", header=0):
         """Critical function that I wrote while sleep deprived"""
@@ -198,6 +210,14 @@ class Collection(Jom, list):
 
     def copy(self):
         return get(str(self))
+    
+    def entries(self):
+        """Iterates through all objects in the Collection excluding those containing \"inline\""""
+        l = []
+        for x in self:
+            if type(x) == Pair and "inline" in x[0]: continue
+            l.append(x)
+        return l
 
 
 

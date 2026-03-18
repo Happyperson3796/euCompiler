@@ -1,5 +1,13 @@
 from ..pdxscript import get, format, Pair, Collection, Jom
 import os
+from .. import globals
+
+def write_file(raw_path: str, name: str, data: Collection):
+    path = globals.mod+"/"+raw_path+"/"
+    os.makedirs(path, exist_ok=True)
+    with open(path+name, "w", encoding="utf-8-sig") as file:
+        file.write(format(data))
+
 
 localization_dir_path = "main_menu/localization/"
 

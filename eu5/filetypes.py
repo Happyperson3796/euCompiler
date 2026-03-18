@@ -1,4 +1,4 @@
-from .objects import append_file, flag, merge_file, pull_file, epython, event, reform
+from .objects import append_file, flag, merge_file, pull_file, epython, event, reform, situation, action
 from .objects.filetype import fileType
 import os
 
@@ -21,8 +21,10 @@ def get(path: str):
         return event.Event(path)
     elif endswith(path, ".reform"):
         return reform.Reform(path)
-    #elif endswith(path, ".focus.dds"):
-    #    return focus_icon.FocusIcon(path)
+    elif endswith(path, ".situation"):
+        return situation.Situation(path)
+    elif endswith(path, ".action"):
+        return action.Action(path)
     elif endswith(path, ".epy"):
         return epython.ePython(path)
     else:
@@ -35,9 +37,11 @@ def order():
         append_file.Appended,
         flag.Flag,
         event.Event,
-        #focus_icon.FocusIcon,
+        reform.Reform,
+        situation.Situation,
+        action.Action,
         epython.ePython,
-        fileType
+        fileType,
     ]
 
 def should_run(path: str):

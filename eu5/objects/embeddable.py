@@ -51,7 +51,6 @@ class Embeddable(fileType):
                 return
 
             for x, y in embeddable_loc.items():
-
                 x = x.replace("$ROOT", root)
                 if isinstance(y, list):
                     z = []
@@ -68,7 +67,7 @@ class Embeddable(fileType):
 
                     obj[0] = newKey
                     o = obj[-1]
-                    if o.startswith("\"") and o.endswith("\""):
+                    if o.startswith("\"") and o.endswith("\"") and y not in self.embedded_loc.keys():
                         self.embedded_loc[y] = o.unquote() #Don't include unquoted embeds, probably are loc keys
                         o.set(y)
 
