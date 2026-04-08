@@ -8,6 +8,8 @@ import re
 import time
 from tqdm import tqdm
 import builtins
+import requests
+import webbrowser
 
 from . import globals
 from .objects import epython
@@ -231,6 +233,20 @@ class Build():
         for depend in self.data["depends"]:
             depend = depend.replace("/", "\\")
             name = depend.split("\\")[-1]
+
+            workshop_id = depend.replace("\\","/").removesuffix("/").split("/")[-1].strip()
+            if workshop_id and workshop_id.isdigit():
+                steam_time = get_steam_mod_time(workshop_id)
+                local_time = os.path.getmtime(depend) if os.path.exists(depend) else 0
+                
+                if steam_time > local_time:
+                    print(f"\033[91mDependency {name} is OUTDATED\033[0m\033[38;5;208m")
+                    steam_url = f"steam://openurl/https://steamcommunity.com/sharedfiles/filedetails/?id={workshop_id}"
+                    webbrowser.open(steam_url)
+                else:
+                    print(f"Dependency {name} is up to date.")
+
+
             print("Building depencency \""+name+"\"...")
             depend = depend.replace("$USER", os.path.expanduser("~"))+"\\"
             d = ".dependency_"+name
@@ -313,3 +329,16 @@ class Build():
         self.clean_empty_dirs()
 
         print("Build Hash: "+compute_directory_hash(globals.mod)[:5])
+
+def get_steam_mod_time(item_id):
+    """Fetches the last update timestamp from Steam."""
+    url = "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
+    data = {'itemcount': 1, 'publishedfileids[0]': item_id}
+    try:
+        r = requests.post(url, data=data, timeout=10)
+        r.raise_for_status()
+        details = r.json()['response']['publishedfiledetails'][0]
+        return int(details.get('time_updated', 0))
+    except Exception as e:
+        print(f"Could not check Steam for ID {item_id}: {e}")
+        return 0
