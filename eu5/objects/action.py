@@ -18,9 +18,29 @@ class Action(Embeddable):
         super().run(data, name, self.get_embeddable())
 
         for action in data.entries():
-            ai_preset = action[-1].get_pop("ai_preset", "")
+            action_key = action[0]
+            action_data: Collection = action[-1]
+
+            ai_preset = action_data.get_pop("ai_preset", "")
             if not ai_preset.is_empty():
-                action[-1].append(ai_will_do.preset(ai_preset))
+                action_data.append(ai_will_do.preset(ai_preset))
+
+            for x in action_data.entries():
+                if (x[0] == "select_country"):
+                    x[0] = "select_trigger"
+                    ed = get("""
+				looking_for_a = country
+				target_flag = target
+				name = "choose_a_country"
+				none_available_msg_key = "no_valid_countries"
+                show_why_not_enabled = yes
+				column = {
+					data = name
+				}""")
+                    ed.reverse()
+                    for y in ed: x[-1].insert(0, y)
+
+
 
         file_utils.write_file("in_game/common/generic_actions/", name+".txt", data)
 

@@ -128,10 +128,11 @@ class Build():
             epython.python_allowed = True
             print("\033[38;5;208mWarning! Unsafe mode is enabled. Do not copy/paste python files you don't understand.\033[0m")
 
-        if "full_cleanup" in self.data.keys() and self.data["full_cleanup"]:
+        if ("full_cleanup" not in self.data.keys()) or ("full_cleanup" in self.data.keys() and self.data["full_cleanup"]):
             for path in os.scandir(self.mod):
                 if path.is_dir(): shutil.rmtree(path.path)
                 if path.is_file() and "build" not in path.name: os.remove(path.path)
+            print("Full Cleanup...")
 
         if os.path.exists(self.mod+"/.build"):
             self.deposit_compiler_files(self.mod, self.mod+"/.build")

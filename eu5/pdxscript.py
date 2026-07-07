@@ -3,7 +3,7 @@ def is_spacing(char):
     return char == " " or char == "\n" or char == "\t" or char == ""
 
 def is_connector(char):
-    return char == "=" or char == "<" or char == ">" or char == "?=" or char == "<=" or char == ">="
+    return char == "=" or char == "<" or char == ">" or char == "?=" or char == "!=" or char == "<=" or char == ">="
 
 
 
@@ -101,6 +101,9 @@ class Pair(Jom):
     def value(self):
         """Equivalent to p[2], p[-1]"""
         return self[2]
+    
+    def copy(self):
+        return Pair(*self.holder)
 
 class Collection(Jom, list):
     def __init__(self, *args, **kwargs):
@@ -254,6 +257,11 @@ def parse(text):
                 if buffer.removesuffix("?") != "":
                     parsed.append(buffer.removesuffix("?"))
                 parsed.append("?"+char)
+                buffer = ""
+            elif (buffer.endswith("!") and char == "=") and not is_quoted: #!= connector handling
+                if buffer.removesuffix("!") != "":
+                    parsed.append(buffer.removesuffix("!"))
+                parsed.append("!"+char)
                 buffer = ""
             elif (buffer.endswith("<") and char == "=") and not is_quoted: #<= connector handling
                 if buffer.removesuffix("<") != "":
