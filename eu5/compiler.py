@@ -12,31 +12,39 @@ import requests
 import webbrowser
 
 from . import globals
-from .objects import epython
+#from .objects import epython
 
 oprint = builtins.print
+
+
 def nprint(*args, **kwargs):
     def sanitize(arg):
         return str(arg).replace(os.path.expanduser("~").split("\\")[-1].strip(), "$USER")
+
     args = [sanitize(arg) for arg in args]
     oprint(*args, **kwargs)
+
+
 builtins.print = nprint
 
-def scandir(dir): #Sorted scandir: 1b, 2z, 3a, ab, bz, ca
-    if (not dir.strip().endswith("states")):
+
+def scandir(dir):  # Sorted scandir: 1b, 2z, 3a, ab, bz, ca
+    if not dir.strip().endswith("states"):
         return os.scandir(dir)
 
     entries = list(os.scandir(dir))
-    entries.sort(key=lambda x: (int(re.match(r'\d+', x.name).group()) if re.match(r'\d+', x.name) else float('inf'), x.name))
+    entries.sort(
+        key=lambda x: (int(re.match(r'\d+', x.name).group()) if re.match(r'\d+', x.name) else float('inf'), x.name))
     return entries
 
 
 def compute_file_hash(file_path):
     hash_func = hashlib.new("sha256")
     with open(file_path, 'rb') as file:
-        while chunk := file.read(8192): #chunks of 8192 bytes
+        while chunk := file.read(8192):  # chunks of 8192 bytes
             hash_func.update(chunk)
     return hash_func.hexdigest()
+
 
 def compute_directory_hash(dir_path):
     sha256 = hashlib.sha256()
@@ -44,23 +52,25 @@ def compute_directory_hash(dir_path):
     for root, _, files in os.walk(dir_path):
         for names in files:
             all_files.append(os.path.join(root, names))
-    
+
     all_files.sort()
 
     for file_path in all_files:
         if file_path.endswith("build.eu5") or file_path.endswith("build.euc"): continue
         relative_path = os.path.relpath(file_path, dir_path)
         sha256.update(relative_path.encode('utf-8'))
-        
+
         with open(file_path, 'rb') as f:
             while chunk := f.read(4096):
                 sha256.update(chunk)
     return sha256.hexdigest()
 
+
 def scan(home_dir):
     Scan(home_dir)
 
-class Scan():
+
+class Scan:
     def __init__(self, home_dir):
 
         self.running_files = 0
@@ -75,9 +85,10 @@ class Scan():
             if self.running_files > 0:
                 self.running_files = 0
                 rerun()
+
         rerun()
 
-    def scan(self, dir): #Base scan func
+    def scan(self, dir):  # Base scan func
         for path in scandir(dir):
             if path.is_dir() and path.name != ".build" and path.name != "Eu5 modding tools":
                 self.scan(path.path)
@@ -85,7 +96,7 @@ class Scan():
                 hash = compute_file_hash(path.path)
                 if hash not in self.hashes:
                     self.hashes.append(hash)
-                    
+
                     self.runnable.append(filetypes.get(path.path))
                     self.running_files += 1
 
@@ -99,16 +110,16 @@ class Scan():
                 if isinstance(r, o):
                     self.runnable.remove(r)
                     r.run()
-                    bar.set_postfix_str(str(round(time.time() - start, 1))+" Seconds")
+                    bar.set_postfix_str(str(round(time.time() - start, 1)) + " Seconds")
 
 
-class Build():
+class Build:
     def __init__(self, mod_path):
         self.mod = mod_path.removesuffix("/").removesuffix("\\")
-        globals.mod = self.mod+"\\"
+        globals.mod = self.mod + "\\"
         globals.mod_namespace = self.mod.split("\\")[-1]
 
-        #print("Created a new Build for "+str(self.mod))
+        # print("Created a new Build for "+str(self.mod))
         if os.path.exists("build.eu5"):
             build_config = "build.eu5"
         else:
@@ -124,45 +135,46 @@ class Build():
                 "overrides": ""
             }
 
-        if "run_unsafe" in self.data.keys() and self.data["run_unsafe"]:
-            epython.python_allowed = True
-            print("\033[38;5;208mWarning! Unsafe mode is enabled. Do not copy/paste python files you don't understand.\033[0m")
+        #if "run_unsafe" in self.data.keys() and self.data["run_unsafe"]:
+        #    epython.python_allowed = True
+        #    print("\033[38;5;208mWarning! Unsafe mode is enabled. Do not copy/paste Python files you don't understand.\033[0m")
 
-        if ("full_cleanup" not in self.data.keys()) or ("full_cleanup" in self.data.keys() and self.data["full_cleanup"]):
+        if ("full_cleanup" not in self.data.keys()) or (
+                "full_cleanup" in self.data.keys() and self.data["full_cleanup"]):
             for path in os.scandir(self.mod):
                 if path.is_dir(): shutil.rmtree(path.path)
                 if path.is_file() and "build" not in path.name: os.remove(path.path)
             print("Full Cleanup...")
 
-        if os.path.exists(self.mod+"/.build"):
-            self.deposit_compiler_files(self.mod, self.mod+"/.build")
-            shutil.rmtree(self.mod+"/.build")
+        if os.path.exists(self.mod + "/.build"):
+            self.deposit_compiler_files(self.mod, self.mod + "/.build")
+            shutil.rmtree(self.mod + "/.build")
         self.clean()
 
-    def collect_compiler_files(self, dir=""): #Collect to /.build/
+    def collect_compiler_files(self, dir=""):  # Collect to /.build/
         if dir == "": dir = self.mod
         for path in scandir(dir):
             if path.is_dir() and path.name != ".build":
                 self.collect_compiler_files(path.path)
             else:
                 if filetypes.should_run(path.path):
-                    build_path = self.mod+"/.build/"+path.path.removeprefix(self.mod)
+                    build_path = self.mod + "/.build/" + path.path.removeprefix(self.mod)
                     build_dir = build_path.removesuffix(path.name)
 
                     os.makedirs(build_dir, exist_ok=True)
 
                     shutil.copy(path.path, build_path)
-                    
+
                     os.remove(path.path)
 
-    def deposit_compiler_files(self, dest, dir=""): #Deposit from /.build/
+    def deposit_compiler_files(self, dest, dir=""):  # Deposit from /.build/
         if dir == "": dir = self.mod
 
         for path in scandir(dir):
             if path.is_dir():
                 self.deposit_compiler_files(dest, path.path)
             else:
-                orig_path = dest+"/"+path.path.split("/.build")[-1]
+                orig_path = dest + "/" + path.path.split("/.build")[-1]
                 os.makedirs(os.path.split(orig_path)[0], exist_ok=True)
                 shutil.copyfile(path.path, orig_path)
                 os.remove(path.path)
@@ -200,7 +212,6 @@ class Build():
             return True
         else:
             return False
-        
 
     def apply_overrides(self):
         head, tail = os.path.split(self.mod)
@@ -208,38 +219,35 @@ class Build():
         overrides = []
         for file in scandir(self.data["overrides"].replace("$USER", os.path.expanduser("~")).replace("/", "\\")):
             if file.is_dir():
-                if file.name.startswith(tail+"_overrides"):
+                if file.name.startswith(tail + "_overrides"):
                     overrides.append(file.path)
         overrides.sort(reverse=True)
 
-        print("Applying overrides for "+tail)
+        print("Applying overrides for " + tail)
 
         for override in overrides:
-            print("Applying "+override+"...")
+            print("Applying " + override + "...")
             for file in scandir(override):
                 if not self.exclude(file.name):
                     if file.is_file():
-                        shutil.copyfile(file.path, self.mod+"/"+file.name)
+                        shutil.copyfile(file.path, self.mod + "/" + file.name)
                     else:
-                        distutils.dir_util.copy_tree(file.path, self.mod+"/"+file.name)
+                        distutils.dir_util.copy_tree(file.path, self.mod + "/" + file.name)
 
-            #scan(self.mod, self.parsed_files)
-
+            # scan(self.mod, self.parsed_files)
 
     def build_dependencies(self):
-        head, tail = os.path.split(self.mod)
-
         if "depends" not in self.data.keys(): return
 
         for depend in self.data["depends"]:
             depend = depend.replace("/", "\\")
             name = depend.split("\\")[-1]
 
-            workshop_id = depend.replace("\\","/").removesuffix("/").split("/")[-1].strip()
+            workshop_id = depend.replace("\\", "/").removesuffix("/").split("/")[-1].strip()
             if workshop_id and workshop_id.isdigit():
                 steam_time = get_steam_mod_time(workshop_id)
                 local_time = os.path.getmtime(depend) if os.path.exists(depend) else 0
-                
+
                 if steam_time > local_time:
                     print(f"\033[91mDependency {name} is OUTDATED\033[0m\033[38;5;208m")
                     steam_url = f"steam://openurl/https://steamcommunity.com/sharedfiles/filedetails/?id={workshop_id}"
@@ -247,35 +255,33 @@ class Build():
                 else:
                     print(f"Dependency {name} is up to date.")
 
+            print("Building dependency \"" + name + "\"...")
+            depend = depend.replace("$USER", os.path.expanduser("~")) + "\\"
+            d = ".dependency_" + name
 
-            print("Building depencency \""+name+"\"...")
-            depend = depend.replace("$USER", os.path.expanduser("~"))+"\\"
-            d = ".dependency_"+name
-
-            if os.path.exists(self.mod+"/"+d+"/"): shutil.rmtree(self.mod+"/"+d+"/")
+            if os.path.exists(self.mod + "/" + d + "/"): shutil.rmtree(self.mod + "/" + d + "/")
 
             for file in scandir(depend):
                 if not self.exclude(file.name):
                     if file.is_file():
-                        shutil.copyfile(file.path, self.mod+"/"+d+"/"+file.name)
+                        shutil.copyfile(file.path, self.mod + "/" + d + "/" + file.name)
                     else:
-                        distutils.dir_util.copy_tree(file.path, self.mod+"/"+d+"/"+file.name)
+                        distutils.dir_util.copy_tree(file.path, self.mod + "/" + d + "/" + file.name)
 
-            if os.path.exists(self.mod+"/"+d+"/.build"):
-                print("Unpacking depencency \""+name+"\"...")
-                self.deposit_compiler_files(self.mod+"/"+d, self.mod+"/"+d+"/.build")
-                shutil.rmtree(self.mod+"/"+d+"/.build")
+            if os.path.exists(self.mod + "/" + d + "/.build"):
+                print("Unpacking dependency \"" + name + "\"...")
+                self.deposit_compiler_files(self.mod + "/" + d, self.mod + "/" + d + "/.build")
+                shutil.rmtree(self.mod + "/" + d + "/.build")
 
-            print("Cleaning depencency \""+name+"\"...")
-            self.clean(self.mod+"/"+d)
+            print("Cleaning dependency \"" + name + "\"...")
+            self.clean(self.mod + "/" + d)
 
-            print("Applying depencency \""+name+"\"...")
-            for file in scandir(self.mod+"/"+d):
+            print("Applying dependency \"" + name + "\"...")
+            for file in scandir(self.mod + "/" + d):
                 if not file.is_file():
-                    distutils.dir_util.copy_tree(file.path, self.mod+"/"+file.name)
+                    distutils.dir_util.copy_tree(file.path, self.mod + "/" + file.name)
 
-            shutil.rmtree(self.mod+"/"+d+"/")
-
+            shutil.rmtree(self.mod + "/" + d + "/")
 
     def fire_build_scripts(self, dir="", mode=0):
         scripts = []
@@ -298,13 +304,13 @@ class Build():
     def build(self):
         self.build_dependencies()
         print()
-        
+
         self.apply_overrides()
 
-        if os.path.exists(globals.mod+"/~.metadata"):
-            if os.path.exists(globals.mod+"/.metadata"):
-                shutil.rmtree(globals.mod+"/.metadata")
-            os.rename(globals.mod+"/~.metadata", globals.mod+"/.metadata")
+        if os.path.exists(globals.mod + "/~.metadata"):
+            if os.path.exists(globals.mod + "/.metadata"):
+                shutil.rmtree(globals.mod + "/.metadata")
+            os.rename(globals.mod + "/~.metadata", globals.mod + "/.metadata")
             print("Unpacked Metadata...")
 
         start = time.time()
@@ -324,12 +330,13 @@ class Build():
         print("Postbuild scripts...")
         self.fire_build_scripts("", 1)
 
-        print("Finished build in "+str(round(time.time() - start, 1))+" Seconds")
+        print("Finished build in " + str(round(time.time() - start, 1)) + " Seconds")
 
-        #print("Cleaning empty dirs...")
+        # print("Cleaning empty dirs...")
         self.clean_empty_dirs()
 
-        print("Build Hash: "+compute_directory_hash(globals.mod)[:5])
+        print("Build Hash: " + compute_directory_hash(globals.mod)[:5])
+
 
 def get_steam_mod_time(item_id):
     """Fetches the last update timestamp from Steam."""
