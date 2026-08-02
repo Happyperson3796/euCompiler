@@ -1,0 +1,157 @@
+test = {
+    name = "a test"
+	monthly_spawn_chance = 0.5
+	
+	can_start = { always = yes }
+	can_end = { always = no }
+	visible = { always = yes }
+
+	on_start = {}
+	on_monthly = {}
+	on_ended = {}
+	tooltip = {}
+
+
+
+	factions = {
+		french_league = {
+			limit = {
+				tag = ENG
+			}
+			desc = "fronce"
+			color = { 37 75 229 }
+		}
+
+		english_league = {
+			limit = {
+				tag = FRA
+			}
+			desc = "ENGLAND WHEHEEE"
+			color = { 243 177 9 }
+		}
+	}
+
+	map = {
+		english_league = {
+			limit = {
+				owner ?= { is_subject_or_below_of = c:FRA }
+			}
+			desc = "ENGLAND WHEHEEE"
+			color = { 243 177 9 }
+		}
+	}
+
+	secondary_map_color = {
+		english_league = {
+			limit = {
+				owner ?= { tag = FRA }
+			}
+		}
+	}
+
+	actions = {
+		test_invade_neighbor_beylik = {
+			name = "test"
+			desc = "does a something"
+			
+			show_message = no
+			
+			visible = {
+				faction = any
+			}
+
+			allow = {
+				scope:actor = {
+					at_war = no
+					has_regent = no
+				}
+			}
+
+			automation_tick = never
+			automation_tick_frequency = 12
+			
+			price = 11
+
+			select_country = {
+				visible = {
+					this != scope:actor
+					#is_neighbor_of = scope:actor
+					faction = any
+				}
+			}
+
+			effect = {
+				if = {
+					limit = {
+						exists = scope:target
+					}
+					scope:actor = {
+						add_casus_belli = {
+							type = casus_belli:cb_insulted_us
+							target = scope:target
+						}
+					}
+				}
+				else = {
+					custom_tooltip = rott_get_cb_against_them_tt
+				}
+			}
+
+			cooldown = { type = invade_neighbor_beylik_test_cooldown_type years = 2 }
+
+			ai_preset = hostile_expansion
+		}
+
+		test_invade_fence = {
+			name = "fence"
+			desc = "is kil"
+			
+			show_message = no
+
+			visible = {
+				faction = french_league
+			}
+			allow = {
+				faction = french_league
+				scope:actor = {
+					at_war = no
+					has_regent = no
+				}
+			}
+
+			automation_tick = never
+			automation_tick_frequency = 12
+			
+			price = 12
+
+			select_country = {
+				visible = {
+					this != scope:actor
+					faction = any
+				}
+			}
+
+			effect = {
+				if = {
+					limit = {
+						exists = scope:target
+					}
+					scope:actor = {
+						add_casus_belli = {
+							type = casus_belli:cb_insulted_us
+							target = scope:target
+						}
+					}
+				}
+				else = {
+					custom_tooltip = rott_get_cb_against_them_tt
+				}
+			}
+
+			cooldown = { type = invade_neighbor_beylik_test_cooldown_type years = 2 }
+
+			ai_preset = hostile_expansion
+		}
+	}
+
+}
