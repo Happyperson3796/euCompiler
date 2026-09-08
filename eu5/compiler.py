@@ -239,23 +239,43 @@ class Build:
     def build_dependencies(self):
         if "depends" not in self.data.keys(): return
 
-        for depend in self.data["depends"]:
+        depends = self.data["depends"]
+        for depend in [*depends]:
+            if not "\\" in depend and depend.endswith(".json"):
+                depends.remove(depend)
+                with open(globals.mod+"/"+depend, "r") as file:
+                    mods = json.load(file)["mods"]
+                for mod in mods:
+                    text = globals.vanilla_workshop+mod["steamId"]
+                    if mod["enabled"]:
+                        depends.append(text)
+
+        for depend in [*depends]:
+            if " : " in depend:
+                depends.remove(depend)
+                id, replacement = depend.split(":", 1)
+                for x in range(len(depends)):
+                    if depends[x].replace("/", "\\").split("\\")[-1].strip() == id.strip():
+                        depends[x] = replacement.strip()
+
+        for depend in depends:
             depend = depend.replace("/", "\\")
             name = depend.split("\\")[-1]
 
-            workshop_id = depend.replace("\\", "/").removesuffix("/").split("/")[-1].strip()
-            if workshop_id and workshop_id.isdigit():
-                steam_time = get_steam_mod_time(workshop_id)
-                local_time = os.path.getmtime(depend) if os.path.exists(depend) else 0
+            if "check_outdated" not in self.data.keys() or self.data["check_outdated"]:
+                workshop_id = depend.replace("\\", "/").removesuffix("/").split("/")[-1].strip()
+                if workshop_id and workshop_id.isdigit():
+                    steam_time = get_steam_mod_time(workshop_id)
+                    local_time = os.path.getmtime(depend) if os.path.exists(depend) else 0
 
-                if steam_time > local_time:
-                    print(f"\033[91mDependency {name} is OUTDATED\033[0m\033[38;5;208m")
-                    steam_url = f"steam://openurl/https://steamcommunity.com/sharedfiles/filedetails/?id={workshop_id}"
-                    webbrowser.open(steam_url)
-                else:
-                    print(f"Dependency {name} is up to date.")
+                    if steam_time > local_time:
+                        print(f"\033[91mDependency {name} is OUTDATED\033[0m\033[38;5;208m")
+                        steam_url = f"steam://openurl/https://steamcommunity.com/sharedfiles/filedetails/?id={workshop_id}"
+                        webbrowser.open(steam_url)
+                    else:
+                        print(f"Dependency {name} is up to date.")
 
-            print("Building dependency \"" + name + "\"...")
+            #print("Building dependency \"" + name + "\"...")
             depend = depend.replace("$USER", os.path.expanduser("~")) + "\\"
             d = ".dependency_" + name
 
@@ -264,8 +284,10 @@ class Build:
             for file in scandir(depend):
                 if not self.exclude(file.name):
                     if file.is_file():
-                        shutil.copyfile(file.path, self.mod + "/" + d + "/" + file.name)
-                    else:
+                        target_dir = self.mod + "/" + d
+                        os.makedirs(target_dir, exist_ok=True)
+                        shutil.copyfile(file.path, target_dir + "/" + file.name)
+                    elif file.is_dir():
                         distutils.dir_util.copy_tree(file.path, self.mod + "/" + d + "/" + file.name)
 
             if os.path.exists(self.mod + "/" + d + "/.build"):
@@ -273,7 +295,7 @@ class Build:
                 self.deposit_compiler_files(self.mod + "/" + d, self.mod + "/" + d + "/.build")
                 shutil.rmtree(self.mod + "/" + d + "/.build")
 
-            print("Cleaning dependency \"" + name + "\"...")
+            #print("Cleaning dependency \"" + name + "\"...")
             self.clean(self.mod + "/" + d)
 
             print("Applying dependency \"" + name + "\"...")
@@ -300,6 +322,8 @@ class Build:
             [file.build() for file in scripts]
         elif mode == 1:
             [file.postbuild() for file in scripts]
+        elif mode == 2:
+            [file.finalbuild() for file in scripts]
 
     def build(self):
         self.build_dependencies()
@@ -329,6 +353,8 @@ class Build:
 
         print("Postbuild scripts...")
         self.fire_build_scripts("", 1)
+
+        self.fire_build_scripts("", 2)
 
         print("Finished build in " + str(round(time.time() - start, 1)) + " Seconds")
 

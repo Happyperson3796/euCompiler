@@ -71,6 +71,12 @@ class StoredData(Jom):
             return False
         raise Exception("Not a boolean!")
 
+    def int(self) -> int:
+        try:
+            return int(str(self.value).strip())
+        except:
+            raise Exception("Not an int!")
+
 
 class Value(StoredData):
     def set(self, value):
@@ -183,6 +189,8 @@ class Collection(Jom, list):
     def get_pop(self, retrieve: str, default=None, debug=False):
         obj = self.get_pop_pair(retrieve, default, debug)
         try:
+            if not isinstance(obj[-1], Jom):
+                return StoredData(default)
             return obj[-1]
         except Exception as e:
             if default is not None:
@@ -253,6 +261,12 @@ class Collection(Jom, list):
             if type(x) == Pair and "inline" in x[0]: continue
             l.append(x)
         return l
+
+    def remove_value(self, x):
+        for y in self:
+            if str(x) == str(y):
+                self.remove(y)
+                return
 
 
 def get(text):  # All combined
@@ -420,34 +434,31 @@ def format_compress(text):
 
     return "".join(r)
 
+def reformat(d):
+    """Convert dict/list/json to pdxscript"""
+    if isinstance(d, dict):
+        r = Collection()
+        for k, v in d.items():
+            r.append(Pair(str(k), "=", reformat(v)))
 
-# def reformat(d):
-#    """Convert dict/list/json to pdxscript"""
-#    if isinstance(d, dict):
-#        r = Collection()
-#        for k in d.keys():
-#            r.append(Pair(str(k), "=", Value(reformat(d[k]))))
-#
-#    elif isinstance(d, list):
-#        r = Collection()
-#        for x in d:
-#            r.append(Value(reformat(x)))
-#
-#    elif isinstance(d, bool):
-#        if d == True:
-#            r = "yes"
-#        else:
-#            r = "no"
-#
-#    elif isinstance(d, int) or isinstance(d, float):
-#        r = str(d)
-#
-#    else:
-#        d = str(d)
-#
-#        if " " in d.strip() or d.strip() == "":
-#            d = "\""+d+"\""
-#
-#        r = d
-#
-#    return r
+    elif isinstance(d, list):
+        r = Collection()
+        for x in d:
+            r.append(Value(reformat(x)))
+
+    elif isinstance(d, bool):
+        if d:
+            r = "yes"
+        else:
+            r = "no"
+
+    elif isinstance(d, (int, float)):
+        r = str(d)
+
+    else:
+        d = str(d)
+        if " " in d.strip() or d.strip() == "":
+            d = f'"{d}"'
+        r = d
+
+    return r
