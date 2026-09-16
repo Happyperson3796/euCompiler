@@ -56,7 +56,7 @@ def compute_directory_hash(dir_path):
     all_files.sort()
 
     for file_path in all_files:
-        if file_path.endswith("build.eu5") or file_path.endswith("build.euc"): continue
+        if file_path.endswith("build.eu5") or file_path.endswith("build.eu"): continue
         relative_path = os.path.relpath(file_path, dir_path)
         sha256.update(relative_path.encode('utf-8'))
 
@@ -120,10 +120,10 @@ class Build:
         globals.mod_namespace = self.mod.split("\\")[-1]
 
         # print("Created a new Build for "+str(self.mod))
-        if os.path.exists("build.eu5"):
-            build_config = "build.eu5"
+        if os.path.exists("build.eu"):
+            build_config = "build.eu"
         else:
-            build_config = "build.euc"
+            build_config = "build.eu5"
         try:
             with open(build_config, "r") as file:
                 self.data = json.load(file)
@@ -134,6 +134,11 @@ class Build:
                 "excludes": [],
                 "overrides": ""
             }
+            while True: pass
+
+        if not os.path.exists(self.mod+"_overrides"):
+            print(self.mod+"_overrides Not Found, is this a mod?")
+            while True: pass
 
         #if "run_unsafe" in self.data.keys() and self.data["run_unsafe"]:
         #    epython.python_allowed = True
